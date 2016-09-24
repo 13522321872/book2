@@ -33,6 +33,7 @@ object GowallaDatasetExploration {
         case terms => CheckIn(terms(0), DateTime.parse(terms(1),format), terms(2).toDouble, terms(3).toDouble,terms(4))
       }
     }
+
     //user, check ins, check in days, locations
     val observations = gowalla.map{
       case check => (check.user, (1L, Set(check.time.toLocalDate), Set(check.location)))
