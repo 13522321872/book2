@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.koala.experiment
+package com.koala.util
 
 import scala.reflect.runtime.universe._
 

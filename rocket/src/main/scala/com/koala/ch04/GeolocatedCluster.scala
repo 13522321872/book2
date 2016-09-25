@@ -1,4 +1,4 @@
-package com.koala.ch03
+package com.koala.ch04
 
 import breeze.linalg.DenseMatrix
 import nak.cluster.DBSCAN._
