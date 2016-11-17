@@ -58,7 +58,6 @@ object GeolocatedCluster {
           println((id, points))
       }
     }
-
     sc.stop()
   }
 
