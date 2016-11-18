@@ -23,42 +23,37 @@ object AppClassificationSVM {
     val sc = new SparkContext(new SparkConf().setAppName(this.getClass.getSimpleName).setMaster(mode))
 
     /* 5 * 4 / 2 = 10 */
-    //TODO 0 or 1, 0 or 2, ...
-    val data = MLUtils.loadLibSVMFile(sc, input).filter(_.label < 2.0).map{
-      case lp =>
-        val label = if (lp.label >= 1.0) 1 else 0
-        new LabeledPoint(label, lp.features)
+    val data = MLUtils.loadLibSVMFile(sc, input).cache()
+    val labels = data.map(_.label).distinct().collect().sorted.combinations(2).map(x => (x.mkString("_"), x))
+
+    labels.foreach {
+      case (tag, tuple) =>
+        val parts = data.filter(lp => tuple.contains(lp.label)).map{
+          case lp =>
+            val label = if (lp.label == tuple(0)) 0 else 1
+            new LabeledPoint(label, lp.features)
+        }
+        val splits = parts.randomSplit(Array(0.6, 0.4), seed = 11L)
+        val training = splits(0).cache()
+        val test = splits(1)
+        val svmAlg = new SVMWithSGD()
+        svmAlg.optimizer
+          .setNumIterations(200)
+          .setRegParam(0.01)
+        val model = svmAlg.run(training)
+        // Clear the default threshold.
+        model.clearThreshold()
+        val scoreAndLabels = test.map { point =>
+          val score = model.predict(point.features)
+          (score, point.label)
+        }
+
+        // Get evaluation metrics.
+        val metrics = new BinaryClassificationMetrics(scoreAndLabels)
+        val auc = metrics.areaUnderROC()
+        model.save(sc, output + tag)
     }
-
-
-
-    // Split data into training (60%) and test (40%).
-    val splits = data.randomSplit(Array(0.6, 0.4), seed = 11L)
-    val training = splits(0).cache()
-    val test = splits(1)
-
-    val svmAlg = new SVMWithSGD()
-    svmAlg.optimizer
-      .setNumIterations(200)
-      .setRegParam(0.01)
-      //.setUpdater(new L1Updater)
-
-    val model = svmAlg.run(training)
-    // Clear the default threshold.
-    model.clearThreshold()
-    // Compute raw scores on the test set.
-    val scoreAndLabels = test.map { point =>
-      val score = model.predict(point.features)
-      (score, point.label)
-    }
-
-    // Get evaluation metrics.
-    val metrics = new BinaryClassificationMetrics(scoreAndLabels)
-    val auROC = metrics.areaUnderROC()
-    println("Area under ROC = " + auROC)
-    // Save and load model
-    // model.save(sc, "target/tmp/scalaSVMWithSGDModel")
-    // val sameModel = SVMModel.load(sc, "target/tmp/scalaSVMWithSGDModel")
+    sc.stop()
   }
 
 }
