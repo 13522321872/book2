@@ -11,8 +11,8 @@ import org.apache.spark.{SparkConf, SparkContext}
 object ExploreModel {
   def main(args: Array[String]): Unit = {
     Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
-    val Array(wh, modelPath, moviePath) = args
-    val conf = new SparkConf().setAppName(this.getClass.getSimpleName).setMaster("local[4]").set("spark.sql.warehouse.dir", wh)
+    val Array(wh, mode, modelPath, moviePath) = args
+    val conf = new SparkConf().setMaster(mode).setAppName(this.getClass.getSimpleName).set("spark.sql.warehouse.dir", wh)
     val sc = new SparkContext(conf)
     val model = FPGrowthModel.load(sc, modelPath)
 
