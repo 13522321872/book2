@@ -12,9 +12,7 @@ object MoviesALSRDDBased {
   def main(args: Array[String]): Unit = {
     Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
     val Array(wh, mode, ratingsPath, output) = args
-    val conf = new SparkConf()
-      .setMaster(mode)
-      .setAppName(this.getClass.getSimpleName)
+    val conf = new SparkConf().setMaster(mode).setAppName(this.getClass.getSimpleName)
 
     val sc = new SparkContext(conf)
     // load ratings
@@ -29,7 +27,7 @@ object MoviesALSRDDBased {
 
     println(s"ratings: $numRatings, users: $numUsers, movies: $numMovies.")
 
-    val Array(training, validation, test) = ratings.randomSplit(Array(0.6, 0.2, 0.2)).map(_.persist)
+    val Array(training, validation, test) = ratings.randomSplit(Array(0.5, 0.3, 0.2)).map(_.persist)
 
     val numTraining = training.count
     val numValidation = validation.count
@@ -49,7 +47,7 @@ object MoviesALSRDDBased {
       val model = ALS.train(training, rank, numIter, lambda)
       val validationRmse = computeRmse(model, validation)
 
-      println(s"$rank, $lambda, $numIter's RMSE (validation): $validationRmse")
+      println(s"($rank, $lambda, $numIter)'s RMSE (validation): $validationRmse")
 
       if (validationRmse < bestValidationRmse) {
         bestModel = Some(model)
@@ -67,7 +65,7 @@ object MoviesALSRDDBased {
     println("The best model improves the baseline by " + "%1.2f".format(improvement) + "%.")
 
     bestModel.get.save(sc, output)
-    sc.stop();
+    sc.stop()
   }
 
   def computeBaseline( data: RDD[Rating], test: RDD[Rating], numTest:Long) : Double ={
