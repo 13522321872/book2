@@ -93,19 +93,19 @@ object ETLStage {
             }
         }.sortBy(_._1)
           .map(x => x._1 + ":" + x._2).mkString(" ")
-        label + " " + vector
+        Math.log(label) + " " + vector
     }
   }
 
   def main(args: Array[String]): Unit = {
     Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
     val spark = SparkSession.builder
-      .config("spark.sql.warehouse.dir", "E:\\git\\data\\wh")
+      .config("spark.sql.warehouse.dir", "")
       .master("local[1]")
       .appName(this.getClass.getName)
       .getOrCreate()
     //TODO omitted
-    val basePath = "......"
+    val basePath = "....."
     etl(spark,  basePath + "dresses_sales.txt")
      .coalesce(1).saveAsTextFile(basePath + "dresses_libsvm")
 
@@ -119,4 +119,5 @@ object ETLStage {
 //      s""""$item" -> $sIndex"""
 //  }.mkString(",")
 //  println (a)
+
 }

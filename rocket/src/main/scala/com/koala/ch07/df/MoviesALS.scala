@@ -56,9 +56,6 @@ object MoviesALS {
   def evaluate(model: ALSModel, df: DataFrame):(Long, Double) = {
     import df.sparkSession.implicits._
     val predictions = model.transform(df).filter($"prediction".notEqual(Double.NaN))
-
-
-
     val evaluator = new RegressionEvaluator()
       .setMetricName("rmse")
       .setLabelCol("rating")

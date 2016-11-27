@@ -27,7 +27,7 @@ object MoviesALSRDDBased {
 
     println(s"ratings: $numRatings, users: $numUsers, movies: $numMovies.")
 
-    val Array(training, validation, test) = ratings.randomSplit(Array(0.5, 0.3, 0.2)).map(_.persist)
+    val Array(training, validation, test) = ratings.randomSplit(Array(0.6, 0.2, 0.2)).map(_.persist)
 
     val numTraining = training.count
     val numValidation = validation.count
