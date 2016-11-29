@@ -19,8 +19,8 @@ object AppClassificationSVM {
       * output: model store path.
       * mode: yarn-client, yarn-cluster or local[*].
       */
-    val Array(input, output, mode) = args
-    val sc = new SparkContext(new SparkConf().setAppName(this.getClass.getSimpleName).setMaster(mode))
+    val Array(wh, input, output, mode) = args
+    val sc = new SparkContext(new SparkConf().setAppName(this.getClass.getSimpleName).setMaster(mode).set("spark.sql.warehouse.dir", wh))
 
     /* 5 * 4 / 2 = 10 */
     val data = MLUtils.loadLibSVMFile(sc, input).cache()
@@ -33,7 +33,7 @@ object AppClassificationSVM {
             val label = if (lp.label == tuple(0)) 0 else 1
             new LabeledPoint(label, lp.features)
         }
-        val splits = parts.randomSplit(Array(0.6, 0.4), seed = 11L)
+        val splits = parts.randomSplit(Array(0.7, 0.3), seed = 11L)
         val training = splits(0).cache()
         val test = splits(1)
         val svmAlg = new SVMWithSGD()
@@ -47,10 +47,10 @@ object AppClassificationSVM {
           val score = model.predict(point.features)
           (score, point.label)
         }
-
         // Get evaluation metrics.
         val metrics = new BinaryClassificationMetrics(scoreAndLabels)
         val auc = metrics.areaUnderROC()
+
         model.save(sc, output + tag)
     }
     sc.stop()

@@ -31,13 +31,9 @@ object AppTrainingData {
         val flt = intro.split(" ").map(_.split("/")).filter(x => x(0).length > 1 && filterProp(x(1))).map(x => x(0))
         (panme, aname, c, flt )
     }.map(x => (x._3, x._4))
-    //minDocFrequency
-    val minDocFrequency = 6
-    val minDF = rdd.flatMap(_._2.distinct)
-      .map((_, 1))
-      .reduceByKey(_ + _)
-      .filter(_._2 >= minDocFrequency)
-      .map(_._1)
+
+
+    val minDF = rdd.flatMap(_._2.distinct).distinct()
     val indexes = minDF.collect().zipWithIndex.toMap
     val training = rdd.repartition(4).map{
       case (label, terms) =>
@@ -53,7 +49,9 @@ object AppTrainingData {
         (AppConst.APP_CLASSES.indexOf(label), svm)
     }.filter(!_._2.isEmpty)
       .map(x => "" + x._1 + " " + x._2)
+
     training.coalesce(1).saveAsTextFile(output)
+
     sc.stop()
   }
 

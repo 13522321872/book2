@@ -30,7 +30,6 @@ object AppClassification {
 
     val data = spark.read.format("libsvm").load(input)
     val Array(trainingData, testData) = data.randomSplit(Array(0.7, 0.3), seed = 1234L)
-
     // Train a NaiveBayes model.
     val model = new NaiveBayes().fit(trainingData)
     val predictions = model.transform(testData)
