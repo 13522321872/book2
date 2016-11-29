@@ -25,7 +25,6 @@ object GeolocatedCluster {
     val conf = new SparkConf().setAppName(this.getClass.getSimpleName).setMaster(mode)
     val sc = new SparkContext(conf)
 
-
     //[user]	[check-in time]		[latitude]	[longitude]	[location id]
     val gowalla = sc.textFile(input).map(_.split("\t")).mapPartitions{
       case iter =>
@@ -34,7 +33,6 @@ object GeolocatedCluster {
           case terms => CheckIn(terms(0), DateTime.parse(terms(1),format), terms(2).toDouble, terms(3).toDouble,terms(4))
         }
     }
-    .filter(_.user == "0")
 
     val checkinsRdd = gowalla
       .map{

@@ -48,7 +48,7 @@ object AppClassification {
  |-- probability: vector (nullable = true)
  |-- prediction: double (nullable = true)
       */
-    model.save(output)
+    //model.save(output)
     spark.stop()
   }
 

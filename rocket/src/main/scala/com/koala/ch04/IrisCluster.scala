@@ -33,10 +33,8 @@ object IrisCluster {
     val featuresCol = "scaledFeatures"
     val k = 3
     val model = new KMeans().setK(k).setFeaturesCol(featuresCol).setSeed(1L).fit(scaledData)
-
     // Evaluate clustering by computing Within Set Sum of Squared Errors.
     val WSSSE = model.computeCost(scaledData)
-
     println(s"$k: Squared Errors = $WSSSE")
 
     model.clusterCenters.foreach(println)
