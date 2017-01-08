@@ -11,7 +11,7 @@ import org.apache.spark.sql.SparkSession
 object ExploreModel {
   def main(args: Array[String]): Unit = {
     Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
-    val Array(wh, mode, modelPath, ratingsPath) = args
+    val Array(wh, mode, modelPath, ratingsPath, moviesPath) = args
     val spark = SparkSession.builder
       .config("spark.sql.warehouse.dir", wh)
       .master(mode)
@@ -20,8 +20,8 @@ object ExploreModel {
 
     import spark.implicits._
 
-    val grayGuy = spark.read.textFile("e:/git/data/ch07/1296666.dat").map(parseRating).toDF()
-    val model = ALSModel.load("e:/git/data/ch07/grayModel")
+    val grayGuy = spark.read.textFile(ratingsPath).map(parseRating).toDF()
+    val model = ALSModel.load(modelPath)
     //model.transform(grayGuy).show()
 
     val rank = 8
@@ -34,13 +34,14 @@ object ExploreModel {
 
     val recommend = EnhancedMatrixFactorizationModel.recommendTForS(rank, userFactors, itemFactors, 100)
       .flatMap(_._2.toSeq)
-    val movies = spark.sparkContext.textFile("E:/git/data/ch07/movies.dat").map(_.split("~")).map(x => (x(0).toInt, x(1)))
+    val movies = spark.sparkContext.textFile(moviesPath).map(_.split("~")).map(x => (x(0).toInt, x(1)))
 
     val haveSeen = grayGuy.map(_.getInt(1)).collect().toSeq
 
-    recommend.join(movies).map {
-      case (docId, (prediction, title))  => (docId, haveSeen.contains(docId), prediction, title)
-    }.foreach(println)
+    recommend.join(movies)
+      .map {
+        case (docId, (prediction, title))  => (docId, haveSeen.contains(docId), prediction, title)
+      }.foreach(println)
 
     spark.stop()
   }
