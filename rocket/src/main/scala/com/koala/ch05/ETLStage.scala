@@ -93,6 +93,7 @@ object ETLStage {
             }
         }.sortBy(_._1)
           .map(x => x._1 + ":" + x._2).mkString(" ")
+        //label+ " " + vector
         Math.log(label) + " " + vector
     }
   }
@@ -105,7 +106,7 @@ object ETLStage {
       .appName(this.getClass.getName)
       .getOrCreate()
     //TODO omitted
-    val basePath = "....."
+    val basePath = "E:\\git\\data\\ch05\\"
     etl(spark,  basePath + "dresses_sales.txt")
      .coalesce(1).saveAsTextFile(basePath + "dresses_libsvm")
 

@@ -1,4 +1,4 @@
-package com.koala.ch07.df
+package com.koala.ch07
 
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.ml.evaluation.RegressionEvaluator

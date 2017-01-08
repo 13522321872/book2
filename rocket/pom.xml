@@ -43,5 +43,13 @@
             <artifactId>json4s-native_2.11</artifactId>
             <version>3.2.11</version>
         </dependency>
+
+
+            <dependency>
+                <groupId>org.roaringbitmap</groupId>
+                <artifactId>RoaringBitmap</artifactId>
+                <version>[0.6,)</version>
+            </dependency>
+
     </dependencies>
 </project>

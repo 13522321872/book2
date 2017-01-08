@@ -1,7 +1,6 @@
 package com.koala.ch05
 
 import org.apache.log4j.{Level, Logger}
-import org.apache.spark.ml.feature.VectorIndexer
 import org.apache.spark.ml.regression._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -26,11 +25,6 @@ object Regressions {
 
     // Automatically identify categorical features, and index them.
     // Set maxCategories so features with > 4 distinct values are treated as continuous.
-    val featureIndexer = new VectorIndexer()
-      .setInputCol("features")
-      .setOutputCol("indexedFeatures")
-      .setMaxCategories(4)
-      .fit(data)
 
     // Split the data into training and test sets (30% held out for testing).
     val Array(trainingData, testData) = data.randomSplit(Array(0.7, 0.3))
@@ -38,27 +32,26 @@ object Regressions {
     testData.persist
 
     lr(data)
-    glr(data)
+    //glr(data)
 
     spark.stop()
   }
 
 
   def lr(training: DataFrame) = {
-    val lr = new LinearRegression().setMaxIter(10).setRegParam(0.3).setElasticNetParam(0.8)
+    val lr = new LinearRegression().setMaxIter(20).setRegParam(10).setElasticNetParam(0.0)
     // Fit the model
     val lrModel = lr.fit(training)
-    // Print the coefficients and intercept for linear regression
+    val predictions = lrModel.transform(training)
+    predictions.select("prediction", "label", "features").show(500)
     println(s"Coefficients: ${lrModel.coefficients} Intercept: ${lrModel.intercept}")
     // Summarize the model over the training set and print out some metrics
     val trainingSummary = lrModel.summary
     println(s"numIterations: ${trainingSummary.totalIterations}")
     println(s"objectiveHistory: ${trainingSummary.objectiveHistory.toList}")
-    trainingSummary.residuals.show()
     println(s"RMSE: ${trainingSummary.rootMeanSquaredError}")
     println(s"r2: ${trainingSummary.r2}")
-    val predictions = lrModel.transform(training)
-    predictions.select("prediction", "label", "features").show(100)
+
   }
 
   def glr(training: DataFrame) = {
