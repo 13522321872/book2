@@ -4,3 +4,7 @@
 /rocket/.idea
 /rocket/target
 /rocket/rocket.iml
+/rocket/src/main/scala/com/koala/visual
+/rocket/src/main/scala/com/koala/visual/*.scala
+/spark-warehouse
+/data
