@@ -8,3 +8,4 @@
 /rocket/src/main/scala/com/koala/visual/*.scala
 /spark-warehouse
 /data
+/production

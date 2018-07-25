@@ -23,7 +23,6 @@ object MoviesALS {
       .appName(this.getClass.getName)
       .getOrCreate()
 
-    //import spark.implicits._
     import spark.implicits._
 
     val ratings = spark.read.textFile(ratingsPath).map(parseRating).toDF()
