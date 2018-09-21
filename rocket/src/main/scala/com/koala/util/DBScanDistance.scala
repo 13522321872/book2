@@ -33,6 +33,5 @@ object DBScanDistance {
           + Math.cos(radLat1) * Math.cos(radLat2) * Math.pow(Math.sin(deltaLng / 2), 2)
       )
     )
-
   }
 }

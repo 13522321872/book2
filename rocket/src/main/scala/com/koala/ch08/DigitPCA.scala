@@ -12,13 +12,16 @@ import org.apache.spark.rdd.RDD
 object DigitPCA {
   def main(args: Array[String]): Unit = {
     Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
-    val Array(mode, trainPath, testPath) = args
 
-    val conf = new SparkConf().setAppName(this.getClass.getSimpleName).setMaster(mode)
+    //2rd_data/ch08/train.dat 2rd_data/ch08/test.dat local[2]
+    val Array(trainPath,testPath,mode) = args
+    val conf = new SparkConf()
+      .setMaster(mode)
+      .setAppName(this.getClass.getSimpleName)
     val sc = new SparkContext(conf)
 
-    val data: RDD[LabeledPoint] = sc.textFile(trainPath).map(_.split(" ")).map {
-      terms =>
+    val data: RDD[LabeledPoint] = sc.textFile(trainPath).map(_.split(" ")).map
+    {  terms =>
         val label = terms(0).toInt
         new LabeledPoint(label, Vectors.dense(terms(1).split("").map(_.toDouble)))
     }.filter(_.label <= 2.0)
@@ -29,10 +32,8 @@ object DigitPCA {
     // Project vectors to the linear space spanned by the top k principal
     // components, keeping the label
     val projected = data.map(p => p.copy(features = pca.transform(p.features)))
-
     projected.take(10).foreach(println)
 
     sc.stop()
-
   }
 }

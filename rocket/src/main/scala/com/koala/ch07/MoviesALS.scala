@@ -5,7 +5,6 @@ import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.ml.recommendation.{ALS, ALSModel}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-
 /**
   * Created by seawalker on 2016/11/19.
   */
@@ -16,13 +15,16 @@ object MoviesALS {
 
   def main(args: Array[String]): Unit = {
     Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
-    val Array(wh, mode, ratingsPath, output) = args
+
+    //spark-warehouse 2rd_data/ch07/ratings.dat output/ch07/model local[2]
+    val Array(whdir, ratingsPath, output, mode) = args
     val spark = SparkSession.builder
-      .config("spark.sql.warehouse.dir", wh)
+      .config("spark.sql.warehouse.dir", whdir)
       .master(mode)
       .appName(this.getClass.getName)
       .getOrCreate()
 
+    //import spark.implicits._
     import spark.implicits._
 
     val ratings = spark.read.textFile(ratingsPath).map(parseRating).toDF()
@@ -47,10 +49,9 @@ object MoviesALS {
     val rmse2 = evaluate(model, test)
 
     println(rmse1, rmse2)
-
+    model.save(output)
     spark.stop()
   }
-
 
   def evaluate(model: ALSModel, df: DataFrame):(Long, Double) = {
     import df.sparkSession.implicits._
@@ -64,9 +65,10 @@ object MoviesALS {
   }
 
   def parseRating(str: String): Rating = {
+    // 用户标识ID  电影标识ID 评分
+    // 1108242,10756728,3
     val fields = str.split(",")
     assert(fields.size == 3)
     Rating(fields(0).toInt, fields(1).toInt, fields(2).toFloat)
   }
-  
 }

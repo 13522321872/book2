@@ -11,18 +11,22 @@ import org.apache.spark.{SparkConf, SparkContext}
 object ExploreModel {
   def main(args: Array[String]): Unit = {
     Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
-    val Array(wh, mode, modelPath, moviePath) = args
-    val conf = new SparkConf().setMaster(mode).setAppName(this.getClass.getSimpleName).set("spark.sql.warehouse.dir", wh)
+
+    //spark-warehouse 2rd_data/ch06/model 2rd_data/ch06/movies.txt local[2]
+    val Array(whdir, modelPath, moviePath, mode) = args
+    val conf = new SparkConf()
+      .set("spark.sql.warehouse.dir",whdir)
+      .setMaster(mode)
+      .setAppName(this.getClass.getSimpleName)
     val sc = new SparkContext(conf)
+
     val model = FPGrowthModel.load(sc, modelPath)
-
-    val userCnt = 222329
-
     val movies = sc.textFile(moviePath).map(_.split(",")).map{
       case terms =>  (terms(0), "%s_%s".format(terms(1), terms(2)))
     }.collect().toMap
 
     // 2-item sets
+    val userCnt = 222329
     val supports = model.freqItemsets.filter(_.items.length <= 2).collect()
       .map(itemSet => (itemSet.items.map(_.toString.toInt).sorted.mkString(","), itemSet.freq * 1.0D / userCnt )).toMap
 

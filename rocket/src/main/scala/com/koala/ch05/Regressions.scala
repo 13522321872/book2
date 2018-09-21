@@ -2,7 +2,7 @@ package com.koala.ch05
 
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.ml.regression._
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.{DataFrame,SparkSession}
 
 /**
   * Created by seawalker on 2016/11/23.
@@ -11,10 +11,10 @@ object Regressions {
   def main(args: Array[String]): Unit = {
     Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
 
-    val Array(wh, mode, input) = args
-
+    //spark-warehouse 2rd_data/ch05/dresses_libsvm/part-00000 local[2]
+    val Array(whdir,input,mode) = args
     val spark = SparkSession.builder
-      .config("spark.sql.warehouse.dir", wh)
+      .config("spark.sql.warehouse.dir", whdir)
       .master(mode)
       .appName(this.getClass.getName)
       .getOrCreate()
@@ -31,12 +31,13 @@ object Regressions {
     trainingData.persist
     testData.persist
 
-    lr(data)
-    //glr(data)
+    //线性回归
+    //lr(data)
+    //广义线性回归
+    glr(data)
 
     spark.stop()
   }
-
 
   def lr(training: DataFrame) = {
     val lr = new LinearRegression().setMaxIter(20).setRegParam(10).setElasticNetParam(0.0)
@@ -45,13 +46,13 @@ object Regressions {
     val predictions = lrModel.transform(training)
     predictions.select("prediction", "label", "features").show(500)
     println(s"Coefficients: ${lrModel.coefficients} Intercept: ${lrModel.intercept}")
+
     // Summarize the model over the training set and print out some metrics
     val trainingSummary = lrModel.summary
     println(s"numIterations: ${trainingSummary.totalIterations}")
     println(s"objectiveHistory: ${trainingSummary.objectiveHistory.toList}")
     println(s"RMSE: ${trainingSummary.rootMeanSquaredError}")
     println(s"r2: ${trainingSummary.r2}")
-
   }
 
   def glr(training: DataFrame) = {
@@ -78,6 +79,4 @@ object Regressions {
     val predictions = model.transform(training)
     predictions.select("prediction", "label", "features").show(100)
   }
-
-
 }

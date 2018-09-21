@@ -4,26 +4,25 @@ import org.apache.log4j.{Level, Logger}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
-
 /**
   * Created by seawalker on 2016/11/23.
   */
 
-case class Sale(userId:Int,           //0
-                Style:String,         //1
-                Price:String,         //2
-                Rating:Double,        //3
-                Size:String,          //4
-                Season:String,        //5
-                NeckLine:String,      //6
-                SleeveLength:String,  //7
-                waiseline:String,     //8
-                Material:String,      //9
-                FabricType:String,    //10
-                Decoration:String,    //11
-                PatternType:String,	  //12
-                Recommendation:Int,   //13
-                MeanSale:Int              //14
+case class Sale(userId:Int,          //0 用户ID
+                Style:String,         //1 类型
+                Price:String,         //2 价格
+                Rating:Double,        //3 等级
+                Size:String,          //4 尺寸
+                Season:String,        //5 季节
+                NeckLine:String,      //6 领口
+                SleeveLength:String,  //7 袖长
+                waiseline:String,     //8 腰围
+                Material:String,      //9 材料
+                FabricType:String,    //10 织物类型
+                Decoration:String,    //11 装饰
+                PatternType:String,	  //12 图案类型
+                Recommendation:Int,   //13 推荐
+                MeanSale:Int          //14 标签
                )
 
 object ETLStage {
@@ -62,8 +61,7 @@ object ETLStage {
             c(0), c(1), c(2).toDouble, c(3), c(4), c(5), c(6), c(7), c(8), c(9), c(10), c(11), c(12).toInt, c(13).toInt)
       }
 
-    // handling missing or wrong values
-
+    // handling missing or wrong values 处理缺失或者错误的值
     sales.map {
       sale =>
         val style = ("Style", sale.Style)
@@ -83,6 +81,7 @@ object ETLStage {
           case "" => "unknown"
           case whoa => sale.Season
         })
+
         val label = sale.MeanSale
         val vector = Seq(style, price, rating, size, season).map {
           case (name, item) =>
@@ -91,8 +90,7 @@ object ETLStage {
               case 1 => (m("default"), item)
               case whoa => (m(item), 1)
             }
-        }.sortBy(_._1)
-          .map(x => x._1 + ":" + x._2).mkString(" ")
+        }.sortBy(_._1).map(x => x._1 + ":" + x._2).mkString(" ")
         //label+ " " + vector
         Math.log(label) + " " + vector
     }
@@ -100,25 +98,16 @@ object ETLStage {
 
   def main(args: Array[String]): Unit = {
     Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
+
+    //spark-warehouse 2rd_data/ch05/dresses_sales.txt output/ch05/dresses_libsvm local[2]
+    val Array(whdir, input, output, mode) = args
     val spark = SparkSession.builder
-      .config("spark.sql.warehouse.dir", "")
-      .master("local[1]")
+      .config("spark.sql.warehouse.dir", whdir)
+      .master(mode)
       .appName(this.getClass.getName)
       .getOrCreate()
-    //TODO omitted
-    val basePath = "E:\\git\\data\\ch05\\"
-    etl(spark,  basePath + "dresses_sales.txt")
-     .coalesce(1).saveAsTextFile(basePath + "dresses_libsvm")
 
+    etl(spark,input).coalesce(1).saveAsTextFile(output)
     spark.stop()
   }
-
-//  val base = 23
-//  val a = rdd.map(_.Season.toLowerCase).distinct().collect().zipWithIndex.map{
-//    case (item, index) =>
-//      val sIndex = base + index
-//      s""""$item" -> $sIndex"""
-//  }.mkString(",")
-//  println (a)
-
 }

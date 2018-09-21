@@ -12,5 +12,4 @@ object AppConst {
     "金融理财",
     "游戏娱乐"
   )
-
 }

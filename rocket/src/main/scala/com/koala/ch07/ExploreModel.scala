@@ -11,16 +11,11 @@ import org.apache.spark.sql.SparkSession
 object ExploreModel {
   def main(args: Array[String]): Unit = {
     Logger.getLogger("org.apache.spark").setLevel(Level.ERROR)
-    /*
-D:\Projects\GitHub\book2\rocket\data\ch07\wh
-local[4]
-D:\Projects\GitHub\book2\rocket\data\ch07\model
-D:\Projects\GitHub\book2\rocket\data\ch07\ratings.dat
-D:\Projects\GitHub\book2\rocket\data\ch07\movies.dat
-     */
-    val Array(wh, mode, modelPath, ratingsPath, moviesPath) = args
+
+     //spark-warehouse 2rd_data/ch07/model 2rd_data/ch07/ratings.dat 2rd_data/ch07/movies.dat local[2]
+    val Array(whdir,modelPath, ratingsPath, moviesPath,mode) = args
     val spark = SparkSession.builder
-      .config("spark.sql.warehouse.dir", wh)
+      .config("spark.sql.warehouse.dir", whdir)
       .master(mode)
       .appName(this.getClass.getName)
       .getOrCreate()
@@ -31,21 +26,16 @@ D:\Projects\GitHub\book2\rocket\data\ch07\movies.dat
     val model = ALSModel.load(modelPath)
     model.transform(grayGuy).show()
 
-    //在模型的metadata/part-0000
-    val rank = 16
+    val rank = 16  //在模型的metadata/part-0000
     val userFactors = model.userFactors.map {
-      case row => (row.getInt(0),  row.getSeq[Float](1).map(_.toDouble).toArray)
+      case row => (row.getInt(0), row.getSeq[Float](1).map(_.toDouble).toArray)
     }.rdd.filter(_._1 == 44670)
-
-
     val itemFactors = model.itemFactors.map {
-      case row => (row.getInt(0),  row.getSeq[Float](1).map(_.toDouble).toArray)
+      case row => (row.getInt(0), row.getSeq[Float](1).map(_.toDouble).toArray)
     }.rdd
-
 
     val recommend = EnhancedMatrixFactorizationModel.recommendTForS(rank, userFactors, itemFactors, 100)
       .flatMap(_._2.toSeq)
-
     val movies = spark.sparkContext.textFile(moviesPath).map(_.split("~")).map(x => (x(0).toInt, x(1)))
 
     val haveSeen = grayGuy.map(_.getInt(1)).collect().toSeq
